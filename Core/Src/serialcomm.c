@@ -6,6 +6,7 @@
 
 #include <ctype.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define SERIALCOMM_COMMAND_QUEUE_SIZE 5
 
@@ -21,7 +22,8 @@ void serialcomm_reset_state(struct SerialCommProcessor *ctx)
 {
     struct SerialCommParseState *s = &ctx->state;
     s->state_code = SERIALCOMM_STATE_PARSE_COMMAND;
-    s->command = 0;
+    s->char_count = 0;
+    memset(s->command, 0, 3);
     s->param1 = 0;
     s->param2 = 0;
 }
@@ -34,10 +36,10 @@ BaseType_t serialcomm_add_char(struct SerialCommProcessor *ctx, char c)
 
     if (s->state_code == SERIALCOMM_STATE_PARSE_COMMAND)
     {
-        if (c != '\r' && c != '\n' && s->command == 0)
+        if (c != '\r' && c != '\n' && s->char_count < 2)
         {
             // Read command character if command has not already been read
-            s->command = c;
+            s->command[s->char_count++] = c;
         }
         else if (c == ',')
         {
@@ -79,9 +81,9 @@ BaseType_t serialcomm_add_char(struct SerialCommProcessor *ctx, char c)
         {
             // End of param2 and command, reset state
             command.status = true;
-            command.command = s->command,
-            command.param1 = s->param1,
-            command.param2 = s->param2,
+            memcpy(command.command, s->command, 3);
+            command.param1 = s->param1;
+            command.param2 = s->param2;
 
             xQueueSendToBackFromISR(ctx->command_queue, &command, &higherPriorityTaskWoken);
             serialcomm_reset_state(ctx);
@@ -99,9 +101,9 @@ BaseType_t serialcomm_add_char(struct SerialCommProcessor *ctx, char c)
         if (c == '\n' || c == '\r')
         {
             command.status = false;
-            command.command = s->command,
-            command.param1 = s->param1,
-            command.param2 = s->param2,
+            memcpy(command.command, s->command, 3);
+            command.param1 = s->param1;
+            command.param2 = s->param2;
             serialcomm_reset_state(ctx);
 
             xQueueSendToBackFromISR(ctx->command_queue, &command, &higherPriorityTaskWoken);

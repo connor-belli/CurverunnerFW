@@ -58,7 +58,7 @@ struct SerialCommProcessor serial_comm;
   * @}
   */
 
-/** @defgroup USBD_CDC_IF_Private_Defines USB_CDC_IF_Private_Defines
+/** @defgroup USBD_CDC_IF_Private_Defines USBD_CDC_IF_Private_Defines
   * @brief Private defines.
   * @{
   */

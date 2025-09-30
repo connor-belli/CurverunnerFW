@@ -15,7 +15,7 @@ extern "C" {
 struct SerialCommand
 {
     bool status;
-    char command;
+    char command[3];
     int param1;
     int param2;
 };
@@ -31,7 +31,8 @@ enum SerialCommStateCode
 struct SerialCommParseState
 {
     enum SerialCommStateCode state_code;
-    char command;
+    char command[3];
+    int char_count;
     int param1;
     int param2;
 };
