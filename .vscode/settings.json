@@ -5,6 +5,8 @@
         "stdint.h": "c",
         "freertos.h": "c",
         "task.h": "c",
-        "curverunner.h": "c"
+        "curverunner.h": "c",
+        "string.h": "c",
+        "stm32f1xx.h": "c"
     }
 }

@@ -8,6 +8,8 @@
 #include "usbd_cdc_if.h"
 #include <stdint.h>
 #include <assert.h>
+#include <ctype.h>
+#include <string.h>
 
 extern ADC_HandleTypeDef hadc1;
 
@@ -75,10 +77,9 @@ struct __attribute__((packed)) ComRegisters
 	uint8_t command;
 	uint16_t param1;
 	uint16_t param2;
-
-	short a;
-	int b;
 };
+
+struct ComRegisters registers;
 
 static void blink_task(void *pvParameters)
 {
@@ -89,10 +90,41 @@ static void blink_task(void *pvParameters)
 	}
 }
 
+static void handle_write_command(uint32_t addr, uint32_t param2, uint32_t size)
+{
+	volatile uint8_t *reg_data = (volatile uint8_t *)&registers;
+
+	if (addr + size > sizeof(struct ComRegisters))
+	{
+		CDC_Transmit_FS((uint8_t *)"!\n", 2);
+	}
+	else
+	{
+		memcpy(reg_data+addr, &param2, size);
+		CDC_Transmit_FS((uint8_t *)"S\n", 2);
+	}
+}
+
+static void handle_read_command(uint32_t param1, uint32_t param2, uint32_t size)
+{
+	int data;
+	char buffer[64];
+	if (param1 + size > sizeof(struct ComRegisters))
+	{
+		CDC_Transmit_FS((uint8_t *)"!\n", 2);
+	}
+	else
+	{
+		snprintf(buffer, sizeof(buffer), "D%u\n", *(uint32_t *)((uint8_t *)&registers + param1));
+		CDC_Transmit_FS((uint8_t *)buffer, strlen(buffer));
+	}
+}
+
 static void serial_task(void *pvParameters)
 {
 	struct SerialCommand command;
-	char response[8];
+	int count = 0;
+
 	for (;;)
 	{
 		xQueueReceive(serial_comm.command_queue, (void *)&command, portMAX_DELAY);
@@ -101,17 +133,40 @@ static void serial_task(void *pvParameters)
 		{
 			CDC_Transmit_FS((uint8_t *)"?\n", 2);
 		}
-		else
+		else if (command.command[0] == 'W')
 		{
-			itoa(command.param1 + command.param2, response, 10);
-			CDC_Transmit_FS((uint8_t*)response, strlen(response));
+			if (isdigit(command.command[1]) && command.command[2] == '\0') {
+				count = command.command[1] - '0';
+				handle_write_command(command.param1, command.param2, count);
+			}
+		}
+		else if (command.command[0] == 'R')
+		{
+			if (isdigit(command.command[1]) && command.command[2] == '\0') {
+				count = command.command[1] - '0';
+				handle_read_command(command.param1, command.param2, count);
+			}
 		}
 	}
+}
 
+void servo_write(volatile uint32_t *pwm_reg, uint16_t value)
+{
+	uint32_t min_servo_pwm = 1000 * 72 / 22;
+	uint32_t servo_slope;
+	
+	if(value > 1800)
+		value = 1800;
+
+	servo_slope = value * (1000 * 72 / 1800) / 22;
+	*pwm_reg = servo_slope + min_servo_pwm;
 }
 
 int curverunner_main()
 {
+
+	uint32_t min_servo_pwm = 1000 * 72 / 22;
+	uint32_t servo_slope;
 	BaseType_t retval;
 	serialcomm_init(&serial_comm);
 
@@ -127,20 +182,22 @@ int curverunner_main()
 		assert(0);
 	}
 
-	// HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
-	// HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
-	// HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
-	// HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+
+
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
 	uint8_t buffer[] = "Hello, World!\r\n";
 	CDC_Transmit_FS(buffer, sizeof(buffer));
 	for (;;)
 	{
-		//		TIM4->CCR1 = 60000;
-		//		TIM4->CCR2 = 0;
-		//		TIM4->CCR3 = 60000;
-		//		TIM4->CCR4 = 0;
+		servo_write(&TIM1->CCR1, registers.aux1);
+		servo_write(&TIM1->CCR2, registers.aux2);
+		servo_write(&TIM1->CCR3, registers.aux3);
 
-
-		vTaskDelay(2000);
+		vTaskDelay(1);
 	}
 }
