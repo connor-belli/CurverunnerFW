@@ -92,6 +92,7 @@ static void blink_task(void *pvParameters)
 
 static void handle_write_command(uint32_t addr, uint32_t param2, uint32_t size)
 {
+	int i;
 	volatile uint8_t *reg_data = (volatile uint8_t *)&registers;
 
 	if (addr + size > sizeof(struct ComRegisters))
@@ -100,22 +101,32 @@ static void handle_write_command(uint32_t addr, uint32_t param2, uint32_t size)
 	}
 	else
 	{
-		memcpy(reg_data+addr, &param2, size);
+		// NOTE: cant use memcpy because reg_data is volatile
+		for(i = 0; i < size; i++) {
+			reg_data[addr + i] = ((uint8_t *)&param2)[i];
+		}
 		CDC_Transmit_FS((uint8_t *)"S\n", 2);
 	}
 }
 
 static void handle_read_command(uint32_t param1, uint32_t param2, uint32_t size)
 {
-	int data;
+	uint32_t data;
 	char buffer[64];
+	int i = 0;
+
 	if (param1 + size > sizeof(struct ComRegisters))
 	{
 		CDC_Transmit_FS((uint8_t *)"!\n", 2);
 	}
 	else
 	{
-		snprintf(buffer, sizeof(buffer), "D%u\n", *(uint32_t *)((uint8_t *)&registers + param1));
+		// NOTE: cant use memcpy because reg_data is volatile
+		for (i = 0; i < size; i++) {
+			((uint8_t *)&data)[i] = *((volatile uint8_t *)&registers + param1 + i);
+		}
+
+		snprintf(buffer, sizeof(buffer), "D%lu\n", data);
 		CDC_Transmit_FS((uint8_t *)buffer, strlen(buffer));
 	}
 }
@@ -135,14 +146,14 @@ static void serial_task(void *pvParameters)
 		}
 		else if (command.command[0] == 'W')
 		{
-			if (isdigit(command.command[1]) && command.command[2] == '\0') {
+			if (isdigit((unsigned char)command.command[1]) && command.command[2] == '\0') {
 				count = command.command[1] - '0';
 				handle_write_command(command.param1, command.param2, count);
 			}
 		}
 		else if (command.command[0] == 'R')
 		{
-			if (isdigit(command.command[1]) && command.command[2] == '\0') {
+			if (isdigit((unsigned char)command.command[1]) && command.command[2] == '\0') {
 				count = command.command[1] - '0';
 				handle_read_command(command.param1, command.param2, count);
 			}
@@ -164,9 +175,6 @@ void servo_write(volatile uint32_t *pwm_reg, uint16_t value)
 
 int curverunner_main()
 {
-
-	uint32_t min_servo_pwm = 1000 * 72 / 22;
-	uint32_t servo_slope;
 	BaseType_t retval;
 	serialcomm_init(&serial_comm);
 
