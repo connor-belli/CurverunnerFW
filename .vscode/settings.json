@@ -7,6 +7,8 @@
         "task.h": "c",
         "curverunner.h": "c",
         "string.h": "c",
-        "stm32f1xx.h": "c"
+        "stm32f1xx.h": "c",
+        "stm32f1xx_hal_gpio.h": "c",
+        "usbd_cdc_if.h": "c"
     }
 }

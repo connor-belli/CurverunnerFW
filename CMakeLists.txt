@@ -47,6 +47,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     Core/Src/curverunner.c
     Core/Src/serialcomm.c
+    Core/Src/motor.c
+    Core/Src/pid_control.c
+    Core/Src/util.c
 )
 
 # Add include paths
