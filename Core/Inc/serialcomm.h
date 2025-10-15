@@ -34,7 +34,9 @@ struct SerialCommParseState
     char command[3];
     int char_count;
     int param1;
+    bool is_negative1;
     int param2;
+    bool is_negative2;
 };
 
 struct SerialCommProcessor
