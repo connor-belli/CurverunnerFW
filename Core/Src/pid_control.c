@@ -40,3 +40,10 @@ void pid_controller_update(struct PIDController *pid, float x, float dt)
     pid->output = p_term + i_term + d_term;
     pid->prev_x = x;
 }
+
+void pid_reset(struct PIDController *pid)
+{
+    pid->i_accum = 0.0f;
+    pid->prev_x = 0.0f;
+    pid->output = 0.0f;
+}

@@ -56,6 +56,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/motor.c
     Core/Src/pid_control.c
     Core/Src/util.c
+    Core/Src/cr_config.c
 )
 
 # Add include paths
