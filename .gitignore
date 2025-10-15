@@ -63,3 +63,4 @@ CMakeUserPresets.json
 build.ninja
 
 build
+.cache
