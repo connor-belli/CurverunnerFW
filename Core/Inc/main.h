@@ -64,6 +64,8 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 
+extern CRC_HandleTypeDef hcrc;
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

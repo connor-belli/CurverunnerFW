@@ -56,7 +56,8 @@ ENTRY(Reset_Handler)
 MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 20K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 64K
+FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 63K
+DATA_FLASH(rw)  : ORIGIN = 0x800FC00, LENGTH = 1K
 }
 
 /* Highest address of the user mode stack */
@@ -235,6 +236,13 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM
+
+  .config_data (NOLOAD) :
+  {
+    . = ALIGN(4);
+    KEEP(*(.config_data))
+    . = ALIGN(4);
+  } >DATA_FLASH
 
 
 
