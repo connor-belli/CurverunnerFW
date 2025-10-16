@@ -9,66 +9,18 @@
 #include "stm32f1xx.h"
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_gpio.h"
+#include "stm32f1xx_hal_i2c.h"
 #include "task.h"
 #include "usbd_cdc_if.h"
 
 #include "curverunner_io_map.h"
 #include "main.h"
 #include "motor.h"
+#include "registers.h"
+#include "i2c_slave.h"
 
 static struct CRMotor motor1 = {0};
 static struct CRMotor motor2 = {0};
-
-struct __attribute__((packed)) ConfigData {
-  uint8_t i2c_address;
-
-  uint8_t aux_mode;
-
-  uint8_t m1_mode;
-  uint16_t m1_rads_per_pulse;
-  uint16_t m1_p;
-  uint16_t m1_i;
-  uint16_t m1_d;
-  uint16_t m1_ff;
-};
-
-struct __attribute__((packed)) MotorRegisters {
-  uint8_t motor_type;
-  uint16_t pulses_per_rev;
-  bool motor_inverted;
-  bool encoder_inverted;
-  uint16_t slew_rate;
-  uint16_t p;
-  uint16_t i;
-  uint16_t d;
-  uint16_t ff;
-  int32_t target;
-  uint8_t control_mode;
-  int16_t vel;
-  int32_t pos;
-  int16_t percent_output;
-};
-
-struct __attribute__((packed)) ComRegisters {
-  uint8_t aux_mode;
-  uint16_t aux1;
-  uint16_t aux2;
-  uint16_t aux3;
-
-  uint16_t servo1;
-  uint16_t servo2;
-  uint16_t servo3;
-
-  struct MotorRegisters m1;
-
-  uint16_t param1;
-  uint16_t param2;
-  uint8_t command;
-};
-
-#define REG_PID_SCALE 1000
-
-struct ComRegisters registers;
 
 static void blink_task(void *pvParameters) {
   for (;;) {
@@ -264,6 +216,7 @@ void update_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor,
 int curverunner_main() {
   BaseType_t retval;
   serialcomm_init(&serial_comm);
+  i2c_init_slave();
 
   retval = xTaskCreate(blink_task, "LED_BLINK", 128, NULL, tskIDLE_PRIORITY + 1,
                        NULL);
