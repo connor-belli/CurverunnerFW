@@ -12,7 +12,7 @@ int32_t unwrap_encoder(uint16_t in, int32_t *prev)
     const int ONE_PERIOD = 65536;
     const int HALF_PERIOD = 32768;
     int32_t c32 = (int32_t)in - HALF_PERIOD; // remove half period to determine (+/-) sign of the wrap
-    int32_t dif = (c32 - *prev);             // core concept: prev + (current - prev) = current
+    int32_t dif = (c32 - *prev); // core concept: prev + (current - prev) = current
 
     // wrap difference from -HALF_PERIOD to HALF_PERIOD. modulo prevents differences after the wrap from having an incorrect result
     int32_t mod_dif = ((dif + HALF_PERIOD) % ONE_PERIOD) - HALF_PERIOD;
@@ -28,7 +28,7 @@ int32_t unwrap_encoder(uint16_t in, int32_t *prev)
 void open_loop_bdc_init(struct CRMotor *motor)
 {
     struct CRMotorIO *io = &motor->io;
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
     // Enable PWM on motor gpio pins
     __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -48,7 +48,7 @@ void open_loop_bdc_init(struct CRMotor *motor)
 void open_loop_bdc_deinit(struct CRMotor *motor)
 {
     struct CRMotorIO *io = &motor->io;
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
     __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m1, 0);
     __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m2, 0);
@@ -77,13 +77,10 @@ void open_loop_set_percent_out(struct CRMotor *motor, float power)
     if (config->motor_inverted)
         power = -power;
 
-    if (power >= 0.0f)
-    {
+    if (power >= 0.0f) {
         __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m1, (uint32_t)(power * arr));
         __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m2, 0);
-    }
-    else
-    {
+    } else {
         __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m1, 0);
         __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m2, (uint32_t)(-power * arr));
     }
@@ -113,11 +110,11 @@ void closed_loop_bdc_init(struct CRMotor *motor)
     data->ma_index = 0;
     data->cur_vel = 0.0f;
 
-    TIM_Encoder_InitTypeDef sConfig = {0};
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
+    TIM_Encoder_InitTypeDef sConfig = { 0 };
+    TIM_MasterConfigTypeDef sMasterConfig = { 0 };
 
     // Initialize Motor channels
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
     // Enable PWM on motor gpio pins
     __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -177,7 +174,7 @@ void closed_loop_update_encoder_count(struct CRMotor *motor)
 void closed_loop_bdc_deinit(struct CRMotor *motor)
 {
     struct CRMotorIO *io = &motor->io;
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
     __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m1, 0);
     __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m2, 0);
@@ -209,18 +206,14 @@ void closed_loop_set_percent_out(struct CRMotor *motor, float power)
     if (config->motor_inverted)
         power = -power;
 
-    if (power >= 0.0f)
-    {
+    if (power >= 0.0f) {
         __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m1, (uint32_t)(power * arr));
         __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m2, 0);
-    }
-    else
-    {
+    } else {
         __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m1, 0);
         __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m2, (uint32_t)(-power * arr));
     }
 }
-
 
 void closed_loop_update_velocity(struct CRMotor *motor, float dt)
 {
@@ -234,8 +227,7 @@ void closed_loop_update_velocity(struct CRMotor *motor, float dt)
     data->prev_count = cur_count;
     data->ma_buff[data->ma_index] = raw_vel;
     data->ma_index = (data->ma_index + 1) % MOTOR_MA_SIZE;
-    for (i = 0; i < MOTOR_MA_SIZE; i++)
-    {
+    for (i = 0; i < MOTOR_MA_SIZE; i++) {
         vel += data->ma_buff[i];
     }
     vel /= MOTOR_MA_SIZE;
@@ -248,8 +240,8 @@ void closed_loop_update(struct CRMotor *motor, float dt)
 
     closed_loop_update_encoder_count(motor);
 
-    if ((motor->control_mode == MOTORCONTROL_POSITION || motor->control_mode == MOTORCONTROL_VELOCITY) && data->prev_control_mode != motor->control_mode)
-    {
+    if ((motor->control_mode == MOTORCONTROL_POSITION || motor->control_mode == MOTORCONTROL_VELOCITY) &&
+        data->prev_control_mode != motor->control_mode) {
         // Reset PID when changing to a closed loop control mode
         pid_reset(&data->pid);
     }
@@ -257,23 +249,17 @@ void closed_loop_update(struct CRMotor *motor, float dt)
     // Update velocity
     closed_loop_update_velocity(motor, dt);
 
-    if (motor->control_mode == MOTORCONTROL_POSITION)
-    {
+    if (motor->control_mode == MOTORCONTROL_POSITION) {
         data->pid.setpoint = ((float)motor->target_position_raw) / motor->closed_loop_bdc_config.pulses_per_rev;
         pid_controller_update(&data->pid, data->encoder_count / motor->closed_loop_bdc_config.pulses_per_rev, dt);
         motor->percent_output = data->pid.output;
-    }
-    else if (motor->control_mode == MOTORCONTROL_VELOCITY)
-    {
+    } else if (motor->control_mode == MOTORCONTROL_VELOCITY) {
         data->pid.setpoint = ((float)motor->target_velocity_raw) / motor->closed_loop_bdc_config.pulses_per_rev;
         pid_controller_update(&data->pid, data->cur_vel / motor->closed_loop_bdc_config.pulses_per_rev, dt);
         motor->percent_output = data->pid.output + data->pid.setpoint * motor->closed_loop_bdc_config.ff;
-    }
-    else if (motor->control_mode == MOTORCONTROL_PERCENT_OUTPUT)
-    {
+    } else if (motor->control_mode == MOTORCONTROL_PERCENT_OUTPUT) {
         // Do nothing, just use the percent output set by the user
-    }
-    else
+    } else
         motor->percent_output = 0.0f; // Unsupported control mode
 
     closed_loop_set_percent_out(motor, motor->percent_output);
@@ -305,8 +291,7 @@ void motor_set_type(struct CRMotor *motor, enum CRMotorType motor_type)
     if (motor->motor_type == motor_type)
         return;
 
-    switch (motor->motor_type)
-    {
+    switch (motor->motor_type) {
     case MOTORTYPE_OPEN_LOOP_BDC:
         open_loop_bdc_deinit(motor);
         break;
@@ -322,8 +307,7 @@ void motor_set_type(struct CRMotor *motor, enum CRMotorType motor_type)
 
     motor->motor_type = motor_type;
 
-    switch (motor->motor_type)
-    {
+    switch (motor->motor_type) {
     case MOTORTYPE_OPEN_LOOP_BDC:
         open_loop_bdc_init(motor);
         break;
@@ -395,8 +379,7 @@ int16_t motor_get_percent_out(struct CRMotor *motor)
 
 void motor_update(struct CRMotor *motor, float dt)
 {
-    switch (motor->motor_type)
-    {
+    switch (motor->motor_type) {
     case MOTORTYPE_DISABLED:
         return;
     case MOTORTYPE_OPEN_LOOP_BDC:

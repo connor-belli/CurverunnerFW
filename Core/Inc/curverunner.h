@@ -5,12 +5,9 @@
 extern "C" {
 #endif
 
-struct HALContainer {
-
-};
+struct HALContainer {};
 
 int curverunner_main();
-
 
 #ifdef __cplusplus
 }

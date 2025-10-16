@@ -11,25 +11,21 @@
 extern "C" {
 #endif
 
-
-struct SerialCommand
-{
+struct SerialCommand {
     bool status;
     char command[3];
     int param1;
     int param2;
 };
 
-enum SerialCommStateCode
-{
+enum SerialCommStateCode {
     SERIALCOMM_STATE_PARSE_COMMAND,
     SERIALCOMM_STATE_PARSE_PARAM1,
     SERIALCOMM_STATE_PARSE_PARAM2,
     SERIALCOMM_STATE_ERROR,
 };
 
-struct SerialCommParseState
-{
+struct SerialCommParseState {
     enum SerialCommStateCode state_code;
     char command[3];
     int char_count;
@@ -39,8 +35,7 @@ struct SerialCommParseState
     bool is_negative2;
 };
 
-struct SerialCommProcessor
-{
+struct SerialCommProcessor {
     QueueHandle_t command_queue;
     struct SerialCommParseState state;
 };

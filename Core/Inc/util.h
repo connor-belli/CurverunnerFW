@@ -13,8 +13,8 @@ extern "C" {
 float clamp(float x, float min_val, float max_val);
 
 /// @brief Chooses the maximum of x and y
-/// @param x 
-/// @param y 
+/// @param x
+/// @param y
 /// @return Max value
 float max(float x, float y);
 

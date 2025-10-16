@@ -9,7 +9,7 @@ void pid_create_params(struct PIDParams *params, float p, float i, float d)
     params->d = d;
 
     params->max_output = 1.0f;
-    if(i != 0.0f)
+    if (i != 0.0f)
         params->max_i_accum = params->max_output / i;
     else
         params->max_i_accum = 0.0f;

@@ -33,11 +33,8 @@ extern "C" {
 #define GPIO_SCL GPIOB
 #define PIN_SDA GPIO_PIN_0
 
-
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* __CURVERUNNER_IO_MAP_H */
-
-

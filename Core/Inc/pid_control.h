@@ -14,7 +14,7 @@ struct PIDParams {
 };
 
 struct PIDController {
-    struct PIDParams* params;
+    struct PIDParams *params;
     float setpoint;
     float output;
 
@@ -24,9 +24,9 @@ struct PIDController {
 
 void pid_create_params(struct PIDParams *params, float p, float i, float d);
 
-void pid_controller_init(struct PIDController* pid, struct PIDParams *params);
-void pid_controller_update(struct PIDController* pid, float x, float dt);
-void pid_reset(struct PIDController* pid);
+void pid_controller_init(struct PIDController *pid, struct PIDParams *params);
+void pid_controller_update(struct PIDController *pid, float x, float dt);
+void pid_reset(struct PIDController *pid);
 
 #ifdef __cplusplus
 }
