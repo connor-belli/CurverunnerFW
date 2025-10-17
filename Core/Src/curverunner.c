@@ -23,7 +23,7 @@
 static struct CRMotor motor1 = { 0 };
 static struct CRMotor motor2 = { 0 };
 
-static void blink_task(void *pvParameters)
+static void blink_task(__attribute__((unused)) void *pvParameters)
 {
     for (;;) {
         HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
@@ -33,7 +33,7 @@ static void blink_task(void *pvParameters)
 
 static void handle_write_command(uint32_t addr, uint32_t param2, uint32_t size)
 {
-    int i = 0;
+    size_t i = 0;
     volatile uint8_t *reg_data = (volatile uint8_t *)&registers;
 
     if (addr + size > sizeof(struct ComRegisters)) {
@@ -47,12 +47,12 @@ static void handle_write_command(uint32_t addr, uint32_t param2, uint32_t size)
     }
 }
 
-static void handle_read_command(uint32_t param1, uint32_t param2, uint32_t size)
+static void handle_read_command(uint32_t param1, uint32_t size)
 {
     uint32_t data = 0;
     char buffer[32];
     size_t len = 0;
-    int i = 0;
+    size_t i = 0;
 
     if (param1 + size > sizeof(struct ComRegisters)) {
         CDC_Transmit_FS((uint8_t *)"!\n", 2);
@@ -70,7 +70,7 @@ static void handle_read_command(uint32_t param1, uint32_t param2, uint32_t size)
     }
 }
 
-static void serial_task(void *pvParameters)
+static void serial_task(__attribute__((unused)) void *pvParameters)
 {
     struct SerialCommand command;
     int count = 0;
@@ -88,7 +88,7 @@ static void serial_task(void *pvParameters)
         } else if (command.command[0] == 'R') {
             if (isdigit((unsigned char)command.command[1]) && command.command[2] == '\0') {
                 count = command.command[1] - '0';
-                handle_read_command(command.param1, command.param2, count);
+                handle_read_command(command.param1, count);
             }
         }
     }
@@ -139,7 +139,7 @@ static void init_motors()
     motor1.closed_loop_bdc_config.motor_inverted = false;
 }
 
-void read_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor, float dt)
+void read_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor)
 {
     taskENTER_CRITICAL();
 
@@ -194,7 +194,7 @@ void read_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor, flo
     taskEXIT_CRITICAL();
 }
 
-void update_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor, float dt)
+void update_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor)
 {
     taskENTER_CRITICAL();
     reg->pos = motor_get_position_raw(motor);
@@ -205,39 +205,39 @@ void update_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor, f
 
 void handle_commands()
 {
-    switch(registers.command) {
-        case COMMAND_SAVE_CONFIG:
-            save_registers_to_config();
+    switch (registers.command) {
+    case COMMAND_SAVE_CONFIG:
+        save_registers_to_config();
+        save_config_data();
+        registers.command = 0;
+        break;
+    case COMMAND_RELOAD_CONFIG:
+        reload_config_data();
+        load_config_to_registers();
+        registers.command = 0;
+        break;
+    case COMMAND_FACTORY_RESET:
+        load_default_config();
+        save_config_data();
+        load_config_to_registers();
+        registers.command = 0;
+        break;
+    case COMMAND_SET_DEVICE_ID:
+        if (registers.device_id != 0) {
+            config_data.device_id = registers.device_id;
+            i2c_set_slave_addr(config_data.device_id);
             save_config_data();
-            registers.command = 0;
-            break;
-        case COMMAND_RELOAD_CONFIG:
-            reload_config_data();
-            load_config_to_registers();
-            registers.command = 0;
-            break;
-        case COMMAND_FACTORY_RESET:
-            load_default_config();
-            save_config_data();
-            load_config_to_registers();
-            registers.command = 0;
-            break;
-        case COMMAND_SET_DEVICE_ID:
-            if (registers.device_id != 0) {
-                config_data.device_id = registers.device_id;
-                i2c_set_slave_addr(config_data.device_id);
-                save_config_data();
-            } else {
-                registers.device_id = config_data.device_id;
-            }
-            registers.command = 0;
-            break;
-        default:
-            break;
+        } else {
+            registers.device_id = config_data.device_id;
+        }
+        registers.command = 0;
+        break;
+    default:
+        break;
     }
 }
 
-int curverunner_main()
+int curverunner_main(__attribute__((unused)) void *argument)
 {
     BaseType_t retval;
     reload_config_data();
@@ -266,9 +266,9 @@ int curverunner_main()
         servo_write(&TIM1->CCR2, registers.aux2);
         servo_write(&TIM1->CCR3, registers.aux3);
 
-        read_motor_registers(&registers.m1, &motor1, 0.001f);
+        read_motor_registers(&registers.m1, &motor1);
         motor_update(&motor1, 0.001f);
-        update_motor_registers(&registers.m1, &motor1, 0.001f);
+        update_motor_registers(&registers.m1, &motor1);
 
         handle_commands();
 

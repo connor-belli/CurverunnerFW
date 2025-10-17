@@ -86,7 +86,7 @@ void open_loop_set_percent_out(struct CRMotor *motor, float power)
     }
 }
 
-void open_loop_update(struct CRMotor *motor, float dt)
+void open_loop_update(struct CRMotor *motor, __attribute__((unused)) float dt)
 {
     if (motor->control_mode == MOTORCONTROL_PERCENT_OUTPUT)
         open_loop_set_percent_out(motor, motor->percent_output);
@@ -251,7 +251,7 @@ void closed_loop_update(struct CRMotor *motor, float dt)
 
     if (motor->control_mode == MOTORCONTROL_POSITION) {
         data->pid.setpoint = ((float)motor->target_position_raw) / motor->closed_loop_bdc_config.pulses_per_rev;
-        pid_controller_update(&data->pid, data->encoder_count / motor->closed_loop_bdc_config.pulses_per_rev, dt);
+        pid_controller_update(&data->pid, (float)data->encoder_count / motor->closed_loop_bdc_config.pulses_per_rev, dt);
         motor->percent_output = data->pid.output;
     } else if (motor->control_mode == MOTORCONTROL_VELOCITY) {
         data->pid.setpoint = ((float)motor->target_velocity_raw) / motor->closed_loop_bdc_config.pulses_per_rev;
@@ -266,11 +266,11 @@ void closed_loop_update(struct CRMotor *motor, float dt)
     data->prev_control_mode = motor->control_mode;
 }
 
-void fit0441_init(struct CRMotor *motor)
+void fit0441_init(__attribute__((unused)) struct CRMotor *motor)
 {
 }
 
-void fit0441_deinit(struct CRMotor *motor)
+void fit0441_deinit(__attribute__((unused)) struct CRMotor *motor)
 {
 }
 

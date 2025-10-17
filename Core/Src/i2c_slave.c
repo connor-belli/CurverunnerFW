@@ -54,28 +54,27 @@ static void i2c_write_byte_slave(uint8_t, uint8_t);
 /* Exported functions --------------------------------------------------------*/
 void i2c_init_slave()
 {
-    HAL_StatusTypeDef status;
     HAL_I2C_StateTypeDef i2cStatus;
 
     // Reinitialize I2C
     i2cStatus = HAL_I2C_GetState(I2C_SLAVE_HANDLE_PTR);
     if (i2cStatus == HAL_I2C_STATE_LISTEN || i2cStatus == HAL_I2C_STATE_BUSY_TX_LISTEN ||
         i2cStatus == HAL_I2C_STATE_BUSY_RX_LISTEN) {
-        status = HAL_I2C_DisableListen_IT(I2C_SLAVE_HANDLE_PTR);
+        HAL_I2C_DisableListen_IT(I2C_SLAVE_HANDLE_PTR);
     }
     HAL_I2C_DeInit(I2C_SLAVE_HANDLE_PTR);
     I2C_SLAVE_HANDLE_PTR->Init.OwnAddress1 = i2c_slave_addr << 1;
     HAL_I2C_Init(I2C_SLAVE_HANDLE_PTR);
     i2c_state = I2C_STATE_READY;
     if (HAL_I2C_GetState(I2C_SLAVE_HANDLE_PTR) != HAL_I2C_STATE_LISTEN) {
-        status = HAL_I2C_EnableListen_IT(I2C_SLAVE_HANDLE_PTR);
+        HAL_I2C_EnableListen_IT(I2C_SLAVE_HANDLE_PTR);
     }
 }
 
 void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t direction, uint16_t addr)
 {
     static uint8_t i2cBuf;
-    if (addr != (i2c_slave_addr << 1)) {
+    if (addr != (i2c_slave_addr << 1) || hi2c != I2C_SLAVE_HANDLE_PTR) {
         return;
     }
     i2c_transfer_direction = direction;
@@ -112,6 +111,10 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t direction, uint16_t a
 
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
+    if (hi2c != I2C_SLAVE_HANDLE_PTR) {
+        return;
+    }
+
     switch (i2c_state) {
     case I2C_STATE_SLAVE_ADDR_MATCHED:
         // Complete to read register address
@@ -150,6 +153,10 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
     static uint8_t i2cBuf;
+
+    if (hi2c != I2C_SLAVE_HANDLE_PTR) {
+        return;
+    }
     switch (i2c_state) {
     case I2C_STATE_SLAVE_TO_MASTER:
         // MemRead mode: After 2nd bytes

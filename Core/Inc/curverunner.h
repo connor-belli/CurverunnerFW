@@ -7,7 +7,7 @@ extern "C" {
 
 struct HALContainer {};
 
-int curverunner_main();
+int curverunner_main(void *argument);
 
 #ifdef __cplusplus
 }

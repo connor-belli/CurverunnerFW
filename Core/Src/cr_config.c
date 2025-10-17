@@ -85,7 +85,7 @@ uint32_t save_config_data()
     FLASH_EraseInitTypeDef EraseInitStruct;
     uint32_t PAGEError;
     uint32_t *data = (uint32_t *)&config_data;
-    int sofar = 0;
+    size_t i = 0;
 
     taskENTER_CRITICAL();
 
@@ -103,11 +103,11 @@ uint32_t save_config_data()
         return HAL_FLASH_GetError();
     }
 
-    while (sofar < num_words)
+    while (i < num_words)
     {
-        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_START_ADDRESS + 4 * sofar, data[sofar]) == HAL_OK)
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_START_ADDRESS + 4 * i, data[i]) == HAL_OK)
         {
-            sofar++;
+            i++;
         }
         else
         {
@@ -119,6 +119,7 @@ uint32_t save_config_data()
     HAL_FLASH_Lock();
 
     taskEXIT_CRITICAL();
+    return FLASH_ERROR_NONE;
 }
 
 void load_default_motor_config(struct MotorConfigData *cfg)

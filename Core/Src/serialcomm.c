@@ -101,7 +101,7 @@ BaseType_t serialcomm_add_char(struct SerialCommProcessor *ctx, char c)
 
 BaseType_t serialcomm_add_chars(struct SerialCommProcessor *ctx, uint8_t *buf, uint32_t len)
 {
-    int i = 0;
+    size_t i = 0;
     BaseType_t higherPriorityTaskWoken = pdFALSE;
 
     for (i = 0; i < len; i++) {
