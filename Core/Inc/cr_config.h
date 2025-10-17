@@ -11,7 +11,7 @@ extern "C" {
 #define CONFIG_SCHEMA_VERSION 1
 #define DEFAULT_DEVICE_ID 21
 
-struct __attribute__((packed, aligned(4))) MotorConfigData {
+struct __attribute__((packed)) MotorConfigData {
     uint8_t motor_type;
     uint16_t pulses_per_rev;
     bool motor_inverted;
@@ -23,7 +23,7 @@ struct __attribute__((packed, aligned(4))) MotorConfigData {
     uint16_t ff;
 };
 
-struct __attribute__((packed, aligned(4))) ConfigData {
+struct __attribute__((packed)) ConfigData {
     uint32_t crc32;
     uint8_t last_initialized_version;
     uint8_t device_id;
