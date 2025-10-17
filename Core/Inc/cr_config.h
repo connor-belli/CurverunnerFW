@@ -39,6 +39,7 @@ extern struct ConfigData config_data;
 void load_config_to_registers();
 void save_registers_to_config();
 
+void load_default_config();
 uint32_t save_config_data();
 void reload_config_data();
 

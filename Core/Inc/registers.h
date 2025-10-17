@@ -46,6 +46,11 @@ struct __attribute__((packed)) ComRegisters {
 
 #define REG_PID_SCALE 1000
 
+#define COMMAND_SAVE_CONFIG 0x01
+#define COMMAND_RELOAD_CONFIG 0x02
+#define COMMAND_FACTORY_RESET 0x03
+#define COMMAND_SET_DEVICE_ID 0x04
+
 extern struct ComRegisters registers;
 
 #ifdef __cplusplus

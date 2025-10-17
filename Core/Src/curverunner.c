@@ -203,6 +203,40 @@ void update_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor, f
     taskEXIT_CRITICAL();
 }
 
+void handle_commands()
+{
+    switch(registers.command) {
+        case COMMAND_SAVE_CONFIG:
+            save_registers_to_config();
+            save_config_data();
+            registers.command = 0;
+            break;
+        case COMMAND_RELOAD_CONFIG:
+            reload_config_data();
+            load_config_to_registers();
+            registers.command = 0;
+            break;
+        case COMMAND_FACTORY_RESET:
+            load_default_config();
+            save_config_data();
+            load_config_to_registers();
+            registers.command = 0;
+            break;
+        case COMMAND_SET_DEVICE_ID:
+            if (registers.device_id != 0) {
+                config_data.device_id = registers.device_id;
+                i2c_set_slave_addr(config_data.device_id);
+                save_config_data();
+            } else {
+                registers.device_id = config_data.device_id;
+            }
+            registers.command = 0;
+            break;
+        default:
+            break;
+    }
+}
+
 int curverunner_main()
 {
     BaseType_t retval;
@@ -235,6 +269,8 @@ int curverunner_main()
         read_motor_registers(&registers.m1, &motor1, 0.001f);
         motor_update(&motor1, 0.001f);
         update_motor_registers(&registers.m1, &motor1, 0.001f);
+
+        handle_commands();
 
         vTaskDelay(1);
     }
