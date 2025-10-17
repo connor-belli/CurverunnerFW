@@ -153,7 +153,7 @@ void read_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor, flo
     // Change motor type if needed
     if (reg->motor_type != motor->motor_type) {
         motor_set_percent_out(motor, 0);
-        motor_init(motor, motor->io, reg->motor_type);
+        motor_set_type(motor, reg->motor_type);
         reg->control_mode = MOTORCONTROL_DISABLED;
         reg->target = 0;
     }
