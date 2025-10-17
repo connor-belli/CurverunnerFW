@@ -90,7 +90,7 @@ uint32_t save_config_data()
     taskENTER_CRITICAL();
 
     // Update CRC
-    config_data.crc32 = calc_crc((void *)&config_data + 4, sizeof(struct ConfigData));
+    config_data.crc32 = calc_crc((void *)&config_data + 4, sizeof(struct ConfigData) - 4);
 
     HAL_FLASH_Unlock();
 
@@ -160,7 +160,7 @@ void reload_config_data()
         *((uint32_t *)&config_data + (addr - start_addr)) = *addr;
     }
 
-    crc = calc_crc((void *)&config_data + 4, sizeof(struct ConfigData));
+    crc = calc_crc((void *)&config_data + 4, sizeof(struct ConfigData) - 4);
 
     if (crc != config_data.crc32 || config_data.last_initialized_version != CONFIG_SCHEMA_VERSION)
     {
