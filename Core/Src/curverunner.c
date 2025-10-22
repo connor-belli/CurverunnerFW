@@ -134,9 +134,9 @@ static void init_motors()
     motor_init(&motor2, motor2_io, MOTORTYPE_OPEN_LOOP_BDC);
     registers.m1.motor_type = MOTORTYPE_CLOSED_LOOP_BDC;
 
-    motor1.closed_loop_bdc_config.pulses_per_rev = 2800;
-    motor1.closed_loop_bdc_config.encoder_inverted = true;
-    motor1.closed_loop_bdc_config.motor_inverted = false;
+    motor1.pulses_per_rev = 2800;
+    motor1.encoder_inverted = true;
+    motor1.motor_inverted = false;
 }
 
 void read_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor)
@@ -158,20 +158,17 @@ void read_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor)
         reg->target = 0;
     }
 
-    // Update motor specific settings
-
-    if (reg->motor_type == MOTORTYPE_OPEN_LOOP_BDC) {
-        motor->open_loop_bdc_config.motor_inverted = reg->motor_inverted;
-    } else if (reg->motor_type == MOTORTYPE_CLOSED_LOOP_BDC) {
-        pid_create_params(&motor->closed_loop_bdc_config.pid_params, (float)reg->p / REG_PID_SCALE,
-                          (float)reg->i / REG_PID_SCALE, (float)reg->d / REG_PID_SCALE);
-        motor->closed_loop_bdc_config.ff = (float)reg->ff / REG_PID_SCALE;
-        motor->closed_loop_bdc_config.pulses_per_rev = reg->pulses_per_rev;
-        motor->closed_loop_bdc_config.encoder_inverted = reg->encoder_inverted;
-        motor->closed_loop_bdc_config.motor_inverted = reg->motor_inverted;
-    } else if (reg->motor_type == MOTORTYPE_FIT0441) {
-        // No settings to change
+    // Update common motor settings
+    pid_create_params(&motor->pid_params, (float)reg->p / REG_PID_SCALE, (float)reg->i / REG_PID_SCALE,
+                      (float)reg->d / REG_PID_SCALE);
+    motor->ff = (float)reg->ff / REG_PID_SCALE;
+    if (reg->pulses_per_rev == 0) {
+        reg->pulses_per_rev = 1;
     }
+    motor->pulses_per_rev = reg->pulses_per_rev;
+    motor->encoder_inverted = reg->encoder_inverted;
+    motor->motor_inverted = reg->motor_inverted;
+    motor->slew_rate = (float)reg->slew_rate / REG_PID_SCALE;
 
     // Apply control mode changes
     if (reg->control_mode == MOTORCONTROL_POSITION) {

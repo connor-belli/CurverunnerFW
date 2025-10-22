@@ -26,34 +26,24 @@ enum MotorControlMode {
     MOTORCONTROL_POSITION = 3
 };
 
+struct MotorInterface;
 struct MotorConfig {};
 
 struct OpenLoopBDCConfig {
-    bool motor_inverted;
 };
 
 struct OpenLoopBDC {};
 
 struct ClosedLoopBDCConfig {
-    int pulses_per_rev;
-    bool encoder_inverted;
-    bool motor_inverted;
-
-    struct PIDParams pid_params;
-    float ff;
 };
 
 struct ClosedLoopBDC {
     struct PIDController pid;
     int32_t prev_encoder_count;
-    int32_t encoder_count;
-    enum MotorControlMode prev_control_mode;
 
     int prev_count;
     float ma_buff[MOTOR_MA_SIZE];
     int ma_index;
-
-    float cur_vel;
 };
 
 struct FIT0441Config {};
@@ -78,10 +68,28 @@ struct CRMotorIO {
 struct CRMotor {
     struct CRMotorIO io;
 
+    enum MotorControlMode prev_control_mode;
     enum MotorControlMode control_mode;
+    
+    float cur_vel;
+    int32_t encoder_count;
+
     int32_t target_position_raw;
     int32_t target_velocity_raw;
+
+    float target_percent_output;
     float percent_output;
+
+    struct PIDController pid;
+
+    // Configs
+    int pulses_per_rev;
+    bool encoder_inverted;
+    bool motor_inverted;
+    struct PIDParams pid_params;
+    float ff;
+    float slew_rate;
+
 
     enum CRMotorType motor_type;
     union {
@@ -95,8 +103,13 @@ struct CRMotor {
         struct OpenLoopBDCConfig open_loop_bdc_config;
         struct FIT0441Config fit0441_config;
     };
+    struct MotorInterface *interface;
 };
 
+/// @brief Initialize the motor struct with given IO and type
+/// @param motor Pointer to motor struct
+/// @param io Motor IO configuration
+/// @param motor_type Motor type
 void motor_init(struct CRMotor *motor, struct CRMotorIO io, enum CRMotorType motor_type);
 
 void motor_set_type(struct CRMotor *motor, enum CRMotorType type);

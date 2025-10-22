@@ -128,7 +128,7 @@ void load_default_motor_config(struct MotorConfigData *cfg)
     cfg->pulses_per_rev = 2800;
     cfg->motor_inverted = false;
     cfg->encoder_inverted = true;
-    cfg->slew_rate = 0;
+    cfg->slew_rate = 50;
     cfg->p = 100;
     cfg->i = 100;
     cfg->d = 0;
