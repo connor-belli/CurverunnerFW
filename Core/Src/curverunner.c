@@ -131,12 +131,7 @@ static void init_motors()
                                    .chan_m2 = TIM_CHANNEL_2 };
 
     motor_init(&motor1, motor1_io, MOTORTYPE_CLOSED_LOOP_BDC);
-    motor_init(&motor2, motor2_io, MOTORTYPE_OPEN_LOOP_BDC);
-    registers.m1.motor_type = MOTORTYPE_CLOSED_LOOP_BDC;
-
-    motor1.pulses_per_rev = 2800;
-    motor1.encoder_inverted = true;
-    motor1.motor_inverted = false;
+    motor_init(&motor2, motor2_io, MOTORTYPE_CLOSED_LOOP_BDC);
 }
 
 void read_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor)
@@ -264,8 +259,11 @@ int curverunner_main(__attribute__((unused)) void *argument)
         servo_write(&TIM1->CCR3, registers.aux3);
 
         read_motor_registers(&registers.m1, &motor1);
+        read_motor_registers(&registers.m2, &motor2);
         motor_update(&motor1, 0.001f);
+        motor_update(&motor2, 0.001f);
         update_motor_registers(&registers.m1, &motor1);
+        update_motor_registers(&registers.m2, &motor2);
 
         handle_commands();
 
