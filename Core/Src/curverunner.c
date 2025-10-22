@@ -178,7 +178,7 @@ void read_motor_registers(struct MotorRegisters *reg, struct CRMotor *motor)
         motor_set_target_velocity(motor, reg->target);
         reg->control_mode = 0xFF;
     } else if (reg->control_mode == MOTORCONTROL_PERCENT_OUTPUT) {
-        motor_set_percent_out(motor, ((float)reg->target - INT16_MAX) / INT16_MAX);
+        motor_set_percent_out(motor, ((int16_t) reg->target) / (float)INT16_MAX);
         reg->control_mode = 0xFF;
     } else if (reg->control_mode == MOTORCONTROL_DISABLED) {
         motor_set_disabled(motor);
