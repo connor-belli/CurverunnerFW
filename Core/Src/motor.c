@@ -98,7 +98,7 @@ void open_loop_bdc_deinit(struct CRMotor *motor)
     GPIO_InitStruct.Pin = io->pin_m1 | io->pin_m2;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(io->gpio_m, &GPIO_InitStruct);
 }
 
 void open_loop_set_percent_out(struct CRMotor *motor, float power)
@@ -154,7 +154,7 @@ void closed_loop_bdc_init(struct CRMotor *motor)
     GPIO_InitStruct.Pin = io->pin_m1 | io->pin_m2;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(io->gpio_m, &GPIO_InitStruct);
 
     __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m1, 0);
     __HAL_TIM_SET_COMPARE(io->tim_motor, io->chan_m2, 0);
@@ -220,7 +220,7 @@ void closed_loop_bdc_deinit(struct CRMotor *motor)
     GPIO_InitStruct.Pin = io->pin_m1 | io->pin_m2;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(io->gpio_m, &GPIO_InitStruct);
 }
 
 void closed_loop_set_percent_out(struct CRMotor *motor, float power)
